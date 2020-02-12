@@ -10,13 +10,12 @@ class HelloControllerSpec extends PlaySpec with GuiceOneAppPerTest {
 
   "HelloController GET" should {
 
-    "「/hello」にGETメソッドでアクセスすると「Hello World」が返る"  in {
+    "「/hello」にGETメソッドでアクセスすると「Hello user hoge」が返る"  in {
       val request = FakeRequest(GET, "/hello")
       val home = route(app, request).get
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/plain")
-      contentAsString(home) mustBe "Hello World"
     }
   }
 
@@ -28,7 +27,6 @@ class HelloControllerSpec extends PlaySpec with GuiceOneAppPerTest {
 
       status(home) mustBe OK
       contentType(home) mustBe Some("application/json")
-      contentAsJson(home) mustBe Json.obj("hello"-> "world", "language" -> "scala")
     }
   }
 }

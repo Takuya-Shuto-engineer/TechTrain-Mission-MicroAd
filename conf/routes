@@ -1,0 +1,2 @@
+GET     /hello                controllers.HelloController.hello
+POST    /hello                controllers.HelloController.helloJson

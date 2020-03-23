@@ -2,14 +2,12 @@
 TechTrainのマイクロアドさんのミッション用のリポジトリ
 
 ## DONE
-- 簡易なJsonAPIの実装
-- レスポンスにCookieを付与
-- Cookie本体にて訪問回数をカウントアップして表示（データベースやメモリには保存していない）
-- 簡易なテストコード
+- htmlを返すAPIを作成
+- html内のimgタグ型Webビーコンを使ってCookieを送信
 
 ## TODO
-- 「計測タグ」ってなに?フロントの処理が必要なのかな?（View消しちゃった） 諸々の知らないことの調査
-- ロガーの実装
+- imgタグによる計測タグをScriptタグに変更してより高度な情報を取得する
+- データベースにCookie情報を保存する
 - メンターに相談
 
 ## 参考文献
@@ -17,3 +15,4 @@ TechTrainのマイクロアドさんのミッション用のリポジトリ
 - https://qiita.com/yoppe/items/f7cbeb825c071691d3f2
 - https://qiita.com/t-mochizuki/items/6498b040e8daefa5692c
 - https://qiita.com/ka2kama/items/6804d80936cd92b2405c#fn6
+- https://qiita.com/AKB428/items/bc6a941315eb95c3742f

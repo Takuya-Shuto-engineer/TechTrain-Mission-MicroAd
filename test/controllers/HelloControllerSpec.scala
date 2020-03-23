@@ -19,14 +19,4 @@ class HelloControllerSpec extends PlaySpec with GuiceOneAppPerTest {
     }
   }
 
-  "HelloController POST" should {
-
-    "「/hello」にPOSTメソッドでアクセスするとJsonが返る"  in {
-      val request = FakeRequest(POST, "/hello")
-      val home = route(app, request).get
-
-      status(home) mustBe OK
-      contentType(home) mustBe Some("application/json")
-    }
-  }
 }

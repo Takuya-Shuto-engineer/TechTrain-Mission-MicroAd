@@ -1,2 +1,2 @@
 GET     /hello                controllers.HelloController.hello
-POST    /hello                controllers.HelloController.helloJson
+GET     /track.gif            controllers.TrackController.pixelTracking

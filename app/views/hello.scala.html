@@ -1,21 +1,11 @@
-@(message: String, GA_ID: String)
-
 <html>
     <head>
-        <!-- Global site tag (gtag.js) - Google Analytics -->
-        <script async src= "https://www.googletagmanager.com/gtag/js?id=@GA_ID"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '@GA_ID');
-         </script>
-
         <title>計測タグサンプル</title>
+        <img src = "http://localhost:9000/track.gif">
     </head>
     <body>
         <section>
-            @message
+            <p>imgタグを用いてCookieを送信しました．</p>
         </section>
     </body>
 </html>

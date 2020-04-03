@@ -5,12 +5,16 @@ import play.Logger
 import play.api.mvc._
 import play.api.libs.Codecs
 import java.security.MessageDigest
-// Java8 lib
+import play.api.db.Database
+import scala.util.parsing.json.{ JSONArray, JSONObject }
 import java.util.Base64
+import domains._
+import play.api.db.DBApi
 
-class TrackController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
+class TrackController @Inject()(cc: ControllerComponents, dbapi: DBApi) extends AbstractController(cc) {
   val COOKIE_KEY = "3RD_PARTY_COOKIE_ID"
   val COOKIE_MAX_AFTER_AGE = Some(31622400 * 2)
+  implicit val db: Database = dbapi.database("default")
 
   // 参考: https://css-tricks.com/snippets/html/base64-encode-of-1x1px-transparent-gif/
   val onePixelGifBase64 = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
@@ -26,7 +30,28 @@ class TrackController @Inject()(cc: ControllerComponents) extends AbstractContro
       Logger.debug(s"Cookie Generate! $newValue")
       newValue
     }
+    val url = request.headers("referer")
+    val browser = request.headers("User-Agent")
+    Logger.debug(s"$browser")
+    val user: User = User(cookieValue, browser)
+    user.register() // ユーザ登録
+    val web: Web = Web(uniqueIdGenerator(), url)
+    web.register() // web登録
     Ok(onePixelGifBytes).withCookies(Cookie(COOKIE_KEY, cookieValue, COOKIE_MAX_AFTER_AGE)).as("image/gif")
+  }
+
+  def getWebList = Action {
+    val list: List[Web] = WebService.list()
+    val webListMap = list.map { web =>
+      val urlEscaped = web.url
+      Map(
+        "id" -> web.id,
+        "url" -> urlEscaped
+      )
+    }
+    // Jsonでposts一覧を返す
+    val webListJson = JSONArray(webListMap.map(JSONObject))
+    Ok(JSONObject(Map("Web" -> webListJson)).toString()).as("application/json")
   }
 
   val uniqueIdGenerator = () => {

@@ -1,2 +1,3 @@
-GET     /hello                controllers.HelloController.hello
-GET     /track.gif            controllers.TrackController.pixelTracking
+GET     /protein                controllers.WebController.protein
+GET     /track.gif              controllers.TrackController.pixelTracking
+GET     /webList                controllers.TrackController.getWebList

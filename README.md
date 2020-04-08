@@ -4,10 +4,9 @@ TechTrainのマイクロアドさんのミッション用のリポジトリ
 ## DONE
 - htmlを返すAPIを作成
 - html内のimgタグ型Webビーコンを使ってCookieを送信
+- データベースにCookie情報を保存する
 
 ## TODO
-- imgタグによる計測タグをScriptタグに変更してより高度な情報を取得する
-- データベースにCookie情報を保存する
 - メンターに相談
 
 ## 参考文献

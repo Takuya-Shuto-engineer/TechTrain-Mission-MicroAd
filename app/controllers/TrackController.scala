@@ -11,10 +11,10 @@ import java.util.Base64
 import domains._
 import play.api.db.DBApi
 
-class TrackController @Inject()(cc: ControllerComponents, dbapi: DBApi) extends AbstractController(cc) {
+class TrackController @Inject()(cc: ControllerComponents, userService: UserService, webService: WebService) extends AbstractController(cc) {
   val COOKIE_KEY = "3RD_PARTY_COOKIE_ID"
   val COOKIE_MAX_AFTER_AGE = Some(31622400 * 2)
-  implicit val db: Database = dbapi.database("default")
+
 
   // 参考: https://css-tricks.com/snippets/html/base64-encode-of-1x1px-transparent-gif/
   val onePixelGifBase64 = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
@@ -33,25 +33,37 @@ class TrackController @Inject()(cc: ControllerComponents, dbapi: DBApi) extends 
     val url = request.headers("referer")
     val browser = request.headers("User-Agent")
     Logger.debug(s"$browser")
-    val user: User = User(cookieValue, browser)
-    user.register() // ユーザ登録
-    val web: Web = Web(uniqueIdGenerator(), url)
-    web.register() // web登録
+    val user: User = User(UserId(cookieValue), browser)
+    userService.save(user) // ユーザ登録
+    val web: Web = Web(WebId(uniqueIdGenerator()), url)
+    webService.save(web) // web登録
     Ok(onePixelGifBytes).withCookies(Cookie(COOKIE_KEY, cookieValue, COOKIE_MAX_AFTER_AGE)).as("image/gif")
   }
 
   def getWebList = Action {
-    val list: List[Web] = WebService.list()
+    val list: List[Web] = webService.getList()
     val webListMap = list.map { web =>
-      val urlEscaped = web.url
       Map(
-        "id" -> web.id,
-        "url" -> urlEscaped
+        "id" -> web.id.value,
+        "url" -> web.url
       )
     }
     // Jsonでposts一覧を返す
     val webListJson = JSONArray(webListMap.map(JSONObject))
     Ok(JSONObject(Map("Web" -> webListJson)).toString()).as("application/json")
+  }
+
+  def getUserList = Action {
+    val list: List[User] = userService.getList()
+    val userListMap = list.map { user =>
+      Map(
+        "id" -> user.id.value,
+        "browser" -> user.browser
+      )
+    }
+    // Jsonでposts一覧を返す
+    val userListJson = JSONArray(userListMap.map(JSONObject))
+    Ok(JSONObject(Map("User" -> userListJson)).toString()).as("application/json")
   }
 
   val uniqueIdGenerator = () => {

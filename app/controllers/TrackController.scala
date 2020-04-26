@@ -13,7 +13,6 @@ import domains._
 
 import scala.concurrent._
 import ExecutionContext.Implicits.global
-import scala.util._
 
 class TrackController @Inject()(cc: ControllerComponents, userService: UserService, webService: WebService) extends AbstractController(cc) {
   val COOKIE_KEY = "3RD_PARTY_COOKIE_ID"

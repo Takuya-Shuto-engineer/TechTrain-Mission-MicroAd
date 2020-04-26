@@ -5,11 +5,10 @@ import play.Logger
 import play.api.mvc._
 import play.api.libs.Codecs
 import java.security.MessageDigest
-import play.api.db.Database
 import scala.util.parsing.json.{ JSONArray, JSONObject }
 import java.util.Base64
 import domains._
-import play.api.db.DBApi
+
 
 class TrackController @Inject()(cc: ControllerComponents, userService: UserService, webService: WebService) extends AbstractController(cc) {
   val COOKIE_KEY = "3RD_PARTY_COOKIE_ID"
@@ -34,14 +33,14 @@ class TrackController @Inject()(cc: ControllerComponents, userService: UserServi
     val browser = request.headers("User-Agent")
     Logger.debug(s"$browser")
     val user: User = User(UserId(cookieValue), browser)
-    userService.save(user) // ユーザ登録
+    userService.save(user)// ユーザ登録
     val web: Web = Web(WebId(uniqueIdGenerator()), url)
     webService.save(web) // web登録
     Ok(onePixelGifBytes).withCookies(Cookie(COOKIE_KEY, cookieValue, COOKIE_MAX_AFTER_AGE)).as("image/gif")
   }
 
   def getWebList = Action {
-    val list: List[Web] = webService.getList()
+    val list: List[Web] = Future(webService.getList())
     val webListMap = list.map { web =>
       Map(
         "id" -> web.id.value,

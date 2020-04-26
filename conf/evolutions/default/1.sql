@@ -2,22 +2,24 @@
 
 # --- !Ups
 create table user (
-  id                        varchar(255) not null,
+  id                        bigint not null auto_increment,
+  cookie                    varchar(255) not null,
   browser                   varchar(255) not null,
-  primary key (id)
+  primary key (cookie)
 );
 
 create table web (
-  id                        varchar(255) not null,
+  id                        bigint not null auto_increment,
   url                       varchar(255) not null,
-  primary key (id)
+  advertiser                varchar(255) not null,
+  primary key (url)
 );
 
 create table user_web (
   id                        bigint not null auto_increment,
-  user_id                   varchar(255) not null,
-  web_id                    bigint not null,
-  count                     bigint not null,
+  cookie                    varchar(255) not null,
+  url                       varchar(255) not null,
+  count                     bigint not null default 0,
   primary key (id)
 );
 

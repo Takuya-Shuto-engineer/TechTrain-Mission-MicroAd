@@ -1,4 +1,5 @@
 GET     /protein                controllers.WebController.protein
+GET     /gym                    controllers.WebController.gym
 GET     /track.gif              controllers.TrackController.pixelTracking
 GET     /webList                controllers.TrackController.getWebList
 GET     /userList               controllers.TrackController.getUserList

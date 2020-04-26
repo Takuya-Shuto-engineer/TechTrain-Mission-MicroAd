@@ -25,21 +25,33 @@ class TrackController @Inject()(cc: ControllerComponents, userService: UserServi
 
   def pixelTracking = Action { request =>
     val cookies = request.cookies
-    val cookieValue = cookies.get(COOKIE_KEY).map { cookie =>
-      Logger.debug(s"Cookie Exists! ${cookie.value}")
-      cookie.value
-    }.getOrElse {
-      val newValue = uniqueIdGenerator()
-      Logger.debug(s"Cookie Generate! $newValue")
-      newValue
-    }
-    val url = request.headers("referer")
+    val url = Url(request.headers("referer"))
     val browser = request.headers("User-Agent")
     Logger.debug(s"$browser")
-    val user: User = User(UserId(cookieValue), browser)
-    Future(userService.save(user))// ユーザ登録
-    val web: Web = Web(WebId(uniqueIdGenerator()), url)
-    Future(webService.save(web)) // web登録
+
+    // 登録済みのwebかどうかをチェック
+    val web: Web = webService.find(url).getOrElse{
+      val advertiser: String = "Unknown"
+      val web: Web = Web(url,advertiser)
+      Future(webService.save(web)) // web新規登録
+      web
+    }
+
+    // 登録済みユーザかチェック
+    val cookieValue = cookies.get(COOKIE_KEY).map { cookie =>
+      Logger.debug(s"Cookie Exists! ${cookie.value}")
+      val user: User = userService.find(UserCookie(cookie.value)).getOrElse{
+        // Cookieを持っているのに登路されていない場合は再登録
+        newUserRegister(cookie.value, browser)
+      }
+      Future(userService.visit(user, web))
+      cookie.value
+    }.getOrElse {
+      // Cookieを持っていないなら発行してユーザ登録
+      val newCookie = uniqueIdGenerator()
+      newUserRegister(newCookie, browser)
+      newCookie
+    }
     Ok(onePixelGifBytes).withCookies(Cookie(COOKIE_KEY, cookieValue, COOKIE_MAX_AFTER_AGE)).as("image/gif")
   }
 
@@ -49,8 +61,8 @@ class TrackController @Inject()(cc: ControllerComponents, userService: UserServi
     listFuture.map { list =>
       val webListMap = list.map { web =>
         Map(
-          "id" -> web.id.value,
-          "url" -> web.url
+          "url" -> web.id.value,
+          "advertiser" -> web.advertiser
         )
       }
       val webListJson = JSONArray(webListMap.map(JSONObject))
@@ -64,12 +76,12 @@ class TrackController @Inject()(cc: ControllerComponents, userService: UserServi
     listFuture.map { list =>
       val userListMap = list.map { user =>
         Map(
-          "id" -> user.id.value,
+          "cookie" -> user.id.value,
           "browser" -> user.browser
         )
       }
       val userListJson = JSONArray(userListMap.map(JSONObject))
-      Ok(JSONObject(Map("Web" -> userListJson)).toString()).as("application/json")
+      Ok(JSONObject(Map("User" -> userListJson)).toString()).as("application/json")
     }
   }
 
@@ -85,6 +97,13 @@ class TrackController @Inject()(cc: ControllerComponents, userService: UserServi
     val id = Codecs.toHexString(md.digest())
     Logger.debug(id)
     id
+  }
+
+  val newUserRegister = (cookie: String, browser: String) =>  {
+    Logger.debug(s"Cookie Generate! $cookie")
+    val newUser: User = User(UserCookie(cookie), browser)
+    Future(userService.save(newUser)) // ユーザ新規登録
+    newUser
   }
 
 }

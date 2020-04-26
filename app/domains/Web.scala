@@ -5,32 +5,32 @@ import play.api.db.{DBApi, Database}
 
 // モデル
 
-case class WebId(val value: String) extends Identifier[String]
+case class Url(val value: String) extends Identifier[String]
 
-class Web(val id: WebId, val url: String) extends Entity[WebId]
+class Web(val id: Url, val advertiser: String) extends Entity[Url]
 
 object Web {
 
-  def apply(id: WebId, url: String): Web = {
-    new Web(id, url)
+  def apply(id: Url, advertiser: String): Web = {
+    new Web(id, advertiser)
   }
 
 }
 
 // レポジトリ
 
-class WebRepository @Inject()(dbapi: DBApi) extends Repository[WebId, Web] {
+class WebRepository @Inject()(dbapi: DBApi) extends Repository[Url, Web] {
 
   implicit val db: Database = dbapi.database("default")
 
-  def resolve(id: WebId): Option[Web] = {
+  def resolve(url: Url): Option[Web] = {
     // 特定のWebのレコードを抜き出す
-    WebStorage.resolve(id.value)
+    WebStorage.resolve(url.value)
   }
 
   def store(web: Web): Unit = {
     // Webの情報を新規に登録する
-    WebStorage.store(web.id.value, web.url)
+    WebStorage.store(web.id.value, web.advertiser)
   }
 
   def list(): List[Web] = WebStorage.selectAll()
@@ -38,9 +38,9 @@ class WebRepository @Inject()(dbapi: DBApi) extends Repository[WebId, Web] {
 }
 
 // サービス
-class WebService @Inject()(webRepository: WebRepository) extends Service[Web, WebId] {
+class WebService @Inject()(webRepository: WebRepository) extends Service[Web, Url] {
 
-  def find(id: WebId): Option[Web] = webRepository.resolve(id)
+  def find(url: Url): Option[Web] = webRepository.resolve(url)
 
   def save(web: Web): Unit = webRepository.store(web)
 

@@ -5,13 +5,13 @@ import javax.inject.Inject
 
 // モデル
 
-case class UserId(val value: String) extends Identifier[String]
+case class UserCookie(val value: String) extends Identifier[String]
 
-class User(val id: UserId, val browser: String) extends Entity[UserId]
+class User(val id: UserCookie, val browser: String) extends Entity[UserCookie]
 
 object User {
 
-  def apply(id: UserId, browser: String): User = {
+  def apply(id: UserCookie, browser: String): User = {
     new User(id, browser)
   }
 
@@ -19,13 +19,13 @@ object User {
 
 // レポジトリ
 
-class UserRepository @Inject()(dbapi: DBApi) extends Repository[UserId, User] {
+class UserRepository @Inject()(dbapi: DBApi) extends Repository[UserCookie, User] {
 
   implicit val db: Database = dbapi.database("default")
 
-  def resolve(id: UserId): Option[User] = {
+  def resolve(cookie: UserCookie): Option[User] = {
     // アクセスして特定のユーザのレコードを抜き出す
-    UserStorage.resolve(id.value)
+    UserStorage.resolve(cookie.value)
   }
 
   def store(user: User): Unit = {
@@ -34,16 +34,22 @@ class UserRepository @Inject()(dbapi: DBApi) extends Repository[UserId, User] {
 
   def list(): List[User] = UserStorage.selectAll()
 
+  def increment(cookie: UserCookie, url: Url): Unit = {
+    UserWebStorage.increment(cookie.value, url.value)
+  }
+
 }
 
 // サービス
-class UserService @Inject()(userRepository: UserRepository) extends Service[User, UserId] {
+class UserService @Inject()(userRepository: UserRepository) extends Service[User, UserCookie] {
 
-  def find(id: UserId): Option[User] = userRepository.resolve(id)
+  def find(id: UserCookie): Option[User] = userRepository.resolve(id)
 
   def save(user: User): Unit = userRepository.store(user)
 
   def getList(): List[User] = userRepository.list()
+
+  def visit(user: User, web: Web): Unit = userRepository.increment(user.id, web.id)
 
 }
 

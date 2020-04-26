@@ -6,36 +6,38 @@ import play.api.db.Database
 
 object UserStorage {
 
-  def store(id: String, browser: String)(implicit db: Database): Unit = {
+  def store(cookie: String, browser: String)(implicit db: Database): Unit = {
     db.withConnection { implicit connection =>
-      SQL(s"insert into user (id, browser) values (\'${id}\', \'${browser}\')").executeUpdate()
+      SQL(s"insert into user (cookie, browser) values (\'${cookie}\', \'${browser}\')").executeUpdate()
     }
   }
 
-  def resolve(id: String)(implicit db: Database): Option[User] = {
-    val parser = str("id") ~ str("browser")
+  def resolve(cookie: String)(implicit db: Database): Option[User] = {
+    val parser = int("id") ~ str("cookie") ~ str("browser")
     val mapper = parser.map {
-      case id ~ browser => Map("id" -> id, "browser" -> browser)
+      case id ~ cookie ~ browser => Map("id" -> id, "cookie" -> cookie, "browser" -> browser)
     }
-    val res: Option[Map[String, String]] = db.withConnection { implicit connection =>
-      SQL(s"select * from user where id == ${id}").as(mapper.singleOpt)
+    val res: Option[Map[String, Any]] = db.withConnection { implicit connection =>
+      SQL(s"select * from user where cookie = \'${cookie}\'").as(mapper.singleOpt)
     }
     res.map { user =>
-      User(UserId(user("id")), user("browser"))
+      User(UserCookie(user("cookie").toString), user("browser").toString)
     }
   }
 
   def selectAll()(implicit db: Database): List[User] = {
-    val parser = str("id") ~ str("browser")
+    val parser = int("id") ~ str("cookie") ~ str("browser")
     val mapper = parser.map {
-      case id ~ browser => Map("id" -> id, "browser" -> browser)
+      case id ~ cookie ~ browser => Map("id" -> id, "cookie" -> cookie, "browser" -> browser)
     }
-    val res: List[Map[String, String]] = db.withConnection { implicit connection =>
+    val res: List[Map[String, Any]] = db.withConnection { implicit connection =>
       SQL("select * from user").as(mapper.*)
     }
     res.map { user =>
-      User(UserId(user("id")), user("browser"))
+      User(UserCookie(user("cookie").toString), user("browser").toString)
     }
   }
 
 }
+
+

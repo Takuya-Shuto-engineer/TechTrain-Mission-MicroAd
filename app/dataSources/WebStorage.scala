@@ -7,35 +7,35 @@ import play.api.db.{DBApi, Database}
 
 object WebStorage {
 
-  def store(id: String, url: String)(implicit db: Database): Unit = {
+  def store(url: String, advertiser: String)(implicit db: Database): Unit = {
     db.withConnection { implicit connection =>
-      SQL(s"insert into web (id, url) values (\'${id}\', \'${url}\')").executeUpdate()
+      SQL(s"insert into web (url, advertiser) values (\'${url}\', \'${advertiser}\')").executeUpdate()
     }
   }
 
-  def resolve(id: String)(implicit db: Database): Option[Web] = {
-    val parser = str("id") ~ str("url")
+  def resolve(url: String)(implicit db: Database): Option[Web] = {
+    val parser = int("id") ~ str("url") ~ str("advertiser")
     val mapper = parser.map {
-      case id ~ url => Map("id" -> id, "url" -> url)
+      case id ~ url ~ advertiser => Map("id" -> id, "url" -> url, "advertiser" -> advertiser)
     }
-    val res: Option[Map[String, String]] = db.withConnection { implicit connection =>
-      SQL(s"select * from web where id == ${id}").as(mapper.singleOpt)
+    val res: Option[Map[String, Any]] = db.withConnection { implicit connection =>
+      SQL(s"select * from web where url = \'${url}\'").as(mapper.singleOpt)
     }
     res.map { web =>
-      Web(WebId(web("id")), web("url"))
+      Web(Url(web("url").toString), web("advertiser").toString)
     }
   }
 
   def selectAll()(implicit db: Database): List[Web] = {
-    val parser = str("id") ~ str("url")
+    val parser = int("id") ~ str("url") ~ str("advertiser")
     val mapper = parser.map {
-      case id ~ url => Map("id" -> id, "url" -> url)
+      case id ~ url ~ advertiser => Map("id" -> id, "url" -> url, "advertiser" -> advertiser)
     }
-    val res: List[Map[String, String]] = db.withConnection { implicit connection =>
+    val res: List[Map[String, Any]] = db.withConnection { implicit connection =>
       SQL("select * from web").as(mapper.*)
     }
     res.map { web =>
-      Web(WebId(web("id")), web("url"))
+      Web(Url(web("url").toString), web("advertiser").toString)
     }
   }
 

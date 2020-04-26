@@ -5,10 +5,15 @@ import play.Logger
 import play.api.mvc._
 import play.api.libs.Codecs
 import java.security.MessageDigest
-import scala.util.parsing.json.{ JSONArray, JSONObject }
+
+import scala.util.parsing.json.{JSONArray, JSONObject}
 import java.util.Base64
+
 import domains._
 
+import scala.concurrent._
+import ExecutionContext.Implicits.global
+import scala.util._
 
 class TrackController @Inject()(cc: ControllerComponents, userService: UserService, webService: WebService) extends AbstractController(cc) {
   val COOKIE_KEY = "3RD_PARTY_COOKIE_ID"
@@ -33,36 +38,40 @@ class TrackController @Inject()(cc: ControllerComponents, userService: UserServi
     val browser = request.headers("User-Agent")
     Logger.debug(s"$browser")
     val user: User = User(UserId(cookieValue), browser)
-    userService.save(user)// ユーザ登録
+    Future(userService.save(user))// ユーザ登録
     val web: Web = Web(WebId(uniqueIdGenerator()), url)
-    webService.save(web) // web登録
+    Future(webService.save(web)) // web登録
     Ok(onePixelGifBytes).withCookies(Cookie(COOKIE_KEY, cookieValue, COOKIE_MAX_AFTER_AGE)).as("image/gif")
   }
 
-  def getWebList = Action {
-    val list: List[Web] = Future(webService.getList())
-    val webListMap = list.map { web =>
-      Map(
-        "id" -> web.id.value,
-        "url" -> web.url
-      )
+  def getWebList = Action.async {
+    val listFuture: Future[List[Web]] = Future(webService.getList())
+
+    listFuture.map { list =>
+      val webListMap = list.map { web =>
+        Map(
+          "id" -> web.id.value,
+          "url" -> web.url
+        )
+      }
+      val webListJson = JSONArray(webListMap.map(JSONObject))
+      Ok(JSONObject(Map("Web" -> webListJson)).toString()).as("application/json")
     }
-    // Jsonでposts一覧を返す
-    val webListJson = JSONArray(webListMap.map(JSONObject))
-    Ok(JSONObject(Map("Web" -> webListJson)).toString()).as("application/json")
   }
 
-  def getUserList = Action {
-    val list: List[User] = userService.getList()
-    val userListMap = list.map { user =>
-      Map(
-        "id" -> user.id.value,
-        "browser" -> user.browser
-      )
+  def getUserList = Action.async {
+    val listFuture: Future[List[User]] = Future(userService.getList())
+
+    listFuture.map { list =>
+      val userListMap = list.map { user =>
+        Map(
+          "id" -> user.id.value,
+          "browser" -> user.browser
+        )
+      }
+      val userListJson = JSONArray(userListMap.map(JSONObject))
+      Ok(JSONObject(Map("Web" -> userListJson)).toString()).as("application/json")
     }
-    // Jsonでposts一覧を返す
-    val userListJson = JSONArray(userListMap.map(JSONObject))
-    Ok(JSONObject(Map("User" -> userListJson)).toString()).as("application/json")
   }
 
   val uniqueIdGenerator = () => {

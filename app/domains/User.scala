@@ -38,6 +38,10 @@ class UserRepository @Inject()(dbapi: DBApi) extends Repository[UserCookie, User
     UserWebStorage.increment(cookie.value, url.value)
   }
 
+  def count(cookie: UserCookie, url: Url): Option[Int] = {
+    UserWebStorage.count(cookie.value, url.value)
+  }
+
 }
 
 // サービス
@@ -51,6 +55,7 @@ class UserService @Inject()(userRepository: UserRepository) extends Service[User
 
   def visit(user: User, web: Web): Unit = userRepository.increment(user.id, web.id)
 
+  def getCount(user: User, web: Web): Option[Int] = userRepository.count(user.id, web.id)
 }
 
 

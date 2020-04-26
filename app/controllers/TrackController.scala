@@ -40,11 +40,10 @@ class TrackController @Inject()(cc: ControllerComponents, userService: UserServi
     // 登録済みユーザかチェック
     val cookieValue = cookies.get(COOKIE_KEY).map { cookie =>
       Logger.debug(s"Cookie Exists! ${cookie.value}")
-      val user: User = userService.find(UserCookie(cookie.value)).getOrElse{
+      userService.find(UserCookie(cookie.value)).getOrElse{
         // Cookieを持っているのに登路されていない場合は再登録
         newUserRegister(cookie.value, browser)
       }
-      Future(userService.visit(user, web))
       cookie.value
     }.getOrElse {
       // Cookieを持っていないなら発行してユーザ登録
@@ -52,6 +51,15 @@ class TrackController @Inject()(cc: ControllerComponents, userService: UserServi
       newUserRegister(newCookie, browser)
       newCookie
     }
+
+    val user: User = User(UserCookie(cookieValue), browser)
+
+    Future(userService.visit(user, web)) // 訪問を記録
+
+    val count: Int = userService.getCount(user, web).getOrElse(0)
+
+    Logger.debug(s"This User visited this website ${count} times.")
+
     Ok(onePixelGifBytes).withCookies(Cookie(COOKIE_KEY, cookieValue, COOKIE_MAX_AFTER_AGE)).as("image/gif")
   }
 
